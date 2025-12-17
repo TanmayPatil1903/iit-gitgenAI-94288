@@ -1,39 +1,55 @@
-#1. Scrape Internship information and batches from Sunbeam website.
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def scrape_internship_info(url):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(url)
-    driver.implicitly_wait(10)
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
 
+    driver = webdriver.Chrome(options=options)
+    driver.get(url)
+
+    wait = WebDriverWait(driver, 30)
     internships = []
-    internships_elements = driver.find_element(By.CLASS_NAME,"list_style")
-    table_body = internships_elements.find_element(By.TAG_NAME,"tbody")
-    table_rows = table_body.find_elements(By.TAG_NAME,"tr")
-    for row in table_rows:
-        cols = row.find_elements(By.TAG_NAME,"td")
-        if len(cols) < 5:
-            continue
-        internship = {
-            "Technology":cols[0].text,
-            "Aim":cols[1].text,
-            "Prerequisite":cols[2].text,
-            "Learning":cols[3].text,
-            "Location":cols[4].text
-        }
-        
-        internships.append(internship)
+
+    try:
+        # Wait until at least one row is present
+        wait.until(EC.presence_of_element_located((By.XPATH, "//table//tr")))
+
+        rows = driver.find_elements(By.XPATH, "//table//tr")
+
+        if len(rows) <= 1:
+            print("Table found but no data rows.")
+            return []
+
+        for row in rows[1:]:  # skip header
+            cols = row.find_elements(By.TAG_NAME, "td")
+
+            if len(cols) >= 5:
+                internships.append({
+                    "Technology": cols[0].text,
+                    "Aim": cols[1].text,
+                    "Prerequisite": cols[2].text,
+                    "Learning": cols[3].text,
+                    "Location": cols[4].text
+                })
+
+    except Exception as e:
+        print("Error:", e)
+
     driver.quit()
     return internships
 
 
 if __name__ == "__main__":
     url = "https://www.sunbeaminfo.in/internship"
-    intrnships = scrape_internship_info(url)
-    for intrn in intrnships:
-        print(intrn)
+    data = scrape_internship_info(url)
+
+    if not data:
+        print("No data found!")
+    else:
+        for d in data:
+            print(d)
