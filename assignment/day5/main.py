@@ -45,6 +45,11 @@ if selected_model_name not in st.session_state.messages:
 st.title("chatbot AI")
 st.toast("thanks for visiting")
 
+def is_image_request(prompt):
+    keywords = ["image", "draw", "generate picture", "photo"]
+    return any(word in prompt.lower() for word in keywords)
+
+
 
 for msg in st.session_state.messages[selected_model_name]:
     with st.chat_message(msg["role"]):
