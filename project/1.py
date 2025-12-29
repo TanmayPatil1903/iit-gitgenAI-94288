@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC 
+import streamlit as st
 
 def scrape_internship_info(url):
     options = Options()
@@ -44,12 +45,19 @@ def scrape_internship_info(url):
     return internships
 
 
-if __name__ == "__main__":
-    url = "https://www.sunbeaminfo.in/internship"
-    data = scrape_internship_info(url)
+# ---------------- STREAMLIT UI ----------------
+st.title("Internship Scraper")
+st.write("Fetch internship details from Sunbeam Internship Page")
+
+default_url = "https://www.sunbeaminfo.in/internship"
+url = st.text_input("Enter Internship URL", default_url)
+
+if st.button("Scrape Internships"):
+    with st.spinner("Scraping... Please wait"):
+        data = scrape_internship_info(url)
 
     if not data:
-        print("No data found!")
+        st.warning("No data found!")
     else:
-        for d in data:
-            print(d)
+        st.success("Data fetched successfully!")
+        st.dataframe(data)
